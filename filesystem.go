@@ -13,14 +13,14 @@ type ErrCannotIndex struct {
 }
 
 func (e *ErrCannotIndex) Error() string {
-	return fmt.Sprintf("Cannot index path or file: %s Caused by %s", e.path, e.casedBy)
+	return fmt.Sprintf("Cannot index path or file: %s Caused by: %s", e.path, e.casedBy)
 }
 
 type FilesystemCfg struct {
 	Path              string   `json:"path" html:"Path"`
 	Recursive         bool     `json:"recursive" html:"Recursive"`
 	FileIncludes      []string `json:"fileIncludes" html:"File includes"`
-	FileExcludes      []string `json:"fileExIncludes" html:"´File excludes"`
+	FileExcludes      []string `json:"fileExcludes" html:"´File excludes"`
 	DirectoryIncludes []string `json:"directoryIncludes" html:"Directory includes"`
 	DirectoryExcludes []string `json:"directoryExcludes" html:"Directory excludes"`
 
@@ -52,6 +52,10 @@ func (fs *FilesystemCfg) InitialScan(walkFunc godirwalk.WalkFunc) error {
 
 	err = godirwalk.Walk(fs.Path, &godirwalk.Options{
 		ErrorCallback: func(path string, err error) godirwalk.ErrorAction {
+			if _, ok := err.(*common.ErrExit); ok {
+				return godirwalk.Halt
+			}
+
 			common.Error(&ErrCannotIndex{
 				path:    path,
 				casedBy: err.Error(),
@@ -62,8 +66,12 @@ func (fs *FilesystemCfg) InitialScan(walkFunc godirwalk.WalkFunc) error {
 		FollowSymbolicLinks: false,
 		Unsorted:            true,
 		Callback: func(path string, attrs *godirwalk.Dirent) error {
+			if !common.AppLifecycle().IsSet() {
+				return &common.ErrExit{}
+			}
+
 			if attrs.ModeType().IsDir() {
-				common.Info("Addwatch: %v", path)
+				common.Info("Add watcher: %v", path)
 
 				return fs.Watcher.Add(path)
 			}
@@ -91,7 +99,7 @@ func (fs *FilesystemCfg) Close() error {
 	b, _ := common.FileExists(fs.Path)
 
 	if b {
-		common.Info("Filesystem close: %v", fs.Path)
+		common.Info("Filesystem close")
 	}
 
 	return nil

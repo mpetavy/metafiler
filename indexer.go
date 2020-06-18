@@ -1,24 +1,15 @@
 package main
 
 import (
-	"fmt"
-	"github.com/karrick/godirwalk"
 	"github.com/mpetavy/common"
 	"github.com/mpetavy/go-dicom"
 	"github.com/mpetavy/go-dicom/dicomtag"
 )
 
-type IndexMessage struct {
-	path  string
-	attrs *godirwalk.Dirent
-}
-
 type IndexerCfg struct {
 	TagIncludes []string `json:"dicomtagIncludes" html:"Dicomtag includes"`
 	TagExcludes []string `json:"dicomtagExcludes" html:"Dicomtag excludes"`
 	TagRenames  []string `json:"dicomtagRenames" html:"Dicomtag renames"`
-
-	Channel chan *IndexMessage `json:"-"`
 }
 
 type Metadata map[string]string
@@ -26,31 +17,18 @@ type Metadata map[string]string
 func NewIndexer(indexer *IndexerCfg) error {
 	common.Info("Indexer open")
 
-	indexer.Channel = make(chan *IndexMessage, 100)
-
-	go func() {
-		common.Info("Index listener started")
-		defer common.Info("Index listener stopped")
-
-		for im := range indexer.Channel {
-			common.Error(indexer.indexFile(im))
-		}
-	}()
-
 	return nil
 }
 
-func (indexer *IndexerCfg) indexFile(im *IndexMessage) error {
-	common.Info("%v", im)
+func (indexer *IndexerCfg) indexFile(fileMessage *FileMessage) (*Metadata, error) {
+	//common.Info("Indexer file: %v", fileMessage.path)
 
-	metadata, err := indexer.indexDicomFile(im.path)
+	metadata, err := indexer.indexDicomFile(fileMessage.path)
 	if common.Error(err) {
-		return err
+		return nil, err
 	}
 
-	fmt.Printf("%v\n", metadata)
-
-	return nil
+	return &metadata, nil
 }
 
 func (indexer *IndexerCfg) indexDicomFile(path string) (Metadata, error) {
@@ -62,7 +40,7 @@ func (indexer *IndexerCfg) indexDicomFile(path string) (Metadata, error) {
 		StopAtTag:     nil,
 	})
 
-	if common.Error(err) {
+	if err != nil {
 		return nil, &ErrCannotIndex{
 			path:    path,
 			casedBy: err.Error(),

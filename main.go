@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/karrick/godirwalk"
 	"github.com/mpetavy/common"
+	"sync"
 	"time"
 )
 
@@ -16,7 +17,17 @@ var (
 
 var (
 	cfg *Cfg
+
+	fileChannel   chan *FileMessage
+	fileChannelWg sync.WaitGroup
+	workerChannel chan struct{}
+	workerWg      sync.WaitGroup
 )
+
+type FileMessage struct {
+	path  string
+	attrs *godirwalk.Dirent
+}
 
 func init() {
 	common.Init(true, LDFLAG_VERSION, "2020", "observes directory paths and index metadata", "mpetavy", fmt.Sprintf("https://github.com/mpetavy/%s", common.Title()), common.APACHE, start, stop, nil, 0)
@@ -78,24 +89,77 @@ func start() error {
 		return err
 	}
 
-	start := time.Now()
-	err = cfg.Filesystem.InitialScan(func(path string, attrs *godirwalk.Dirent) error {
-		if common.AppLifecycle().IsSet() {
-			cfg.Indexer.Channel <- &IndexMessage{path, attrs}
+	fileChannel = make(chan *FileMessage, cfg.System.ChannelSize)
+	fileChannelWg = sync.WaitGroup{}
+	workerChannel = make(chan struct{}, cfg.System.WorkerSize)
+	workerWg = sync.WaitGroup{}
+
+	fileChannelWg.Add(1)
+
+	go func() {
+		common.Info("Channel started")
+		defer func() {
+			fileChannelWg.Done()
+			common.Info("Channel stopped")
+		}()
+
+		for {
+			var fileMessage *FileMessage
+			var ok bool
+
+			select {
+			case fileMessage, ok = <-fileChannel:
+				if !ok {
+					return
+				}
+			case <-common.AppLifecycle().Channel():
+				return
+			}
+
+			workerChannel <- struct{}{}
+			workerWg.Add(1)
+
+			go func(fileMessage *FileMessage) {
+				defer func() {
+					workerWg.Done()
+
+					<-workerChannel
+				}()
+
+				metadata, err := cfg.Indexer.indexFile(fileMessage)
+				if common.Error(err) {
+					return
+				}
+
+				common.Debug("%v\n", metadata)
+			}(fileMessage)
 		}
+	}()
+
+	start := time.Now()
+
+	err = cfg.Filesystem.InitialScan(func(path string, attrs *godirwalk.Dirent) error {
+		fileChannel <- &FileMessage{path, attrs}
 
 		return nil
 	})
 
+	close(fileChannel)
+
+	fileChannelWg.Wait()
+
+	common.Info("Time elapsed: %v", time.Since(start))
+
 	if common.Error(err) {
 		return err
 	}
-	fmt.Printf("time elapsed: %v\n", time.Since(start))
 
 	return nil
 }
 
 func stop() error {
+	workerWg.Wait()
+
 	common.Error(cfg.Filesystem.Close())
 	common.Error(cfg.Indexer.Close())
 	common.Error(cfg.MongoDB.Close())
