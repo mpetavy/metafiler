@@ -1,0 +1,18 @@
+{
+    "flags": {},
+    "mongodb": {
+        "hostname": "localhost",
+        "port": 27017,
+        "ssl": false,
+        "database": "metafiler",
+        "timeout": 0
+    },
+    "filesystem": {
+        "path": "d:\\Dicom-Files",
+        "recursive": true,
+        "fileIncludes": null,
+        "fileExIncludes": null,
+        "directoryIncludes": null,
+        "directoryExcludes": null
+    }
+}
