@@ -52,7 +52,7 @@ func createCtx(mongodb *MongoCfg) context.Context {
 
 func (mongodb *MongoCfg) Close() error {
 	if mongodb.Client != nil {
-		common.Info("MongoDB close: %v", mongodb.URL)
+		common.Info("MongoDB close")
 
 		return mongodb.Client.Disconnect(nil)
 	}

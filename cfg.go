@@ -6,8 +6,13 @@ import (
 	"io/ioutil"
 )
 
+type SystemCfg struct {
+	ChannelSize int `json:"channelSize" html:"Channel size"`
+	WorkerSize  int `json:"workerSize" html:"Worker Size"`
+}
 type Cfg struct {
 	common.Configuration
+	System     SystemCfg     `json:"system" html:"System"`
 	MongoDB    MongoCfg      `json:"mongodb" html:"Mongo DB"`
 	Filesystem FilesystemCfg `json:"filesystem" html:"Filesystem"`
 	Indexer    IndexerCfg    `json:"indexer" html:"Indexer"`

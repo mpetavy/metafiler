@@ -1,6 +1,8 @@
 {
-  "flags": {
-    "log.verbose": "true"
+  "flags": {},
+  "system": {
+    "channelSize": 10000000,
+    "workerSize": 40
   },
   "mongodb": {
     "hostname": "localhost",
@@ -10,10 +12,10 @@
     "timeout": 0
   },
   "filesystem": {
-    "path": "d:\\Dicom-Files",
+    "path": "d:\\Dicom-Files.big",
     "recursive": false,
     "fileIncludes": null,
-    "fileExIncludes": null,
+    "fileExcludes": null,
     "directoryIncludes": null,
     "directoryExcludes": null
   },
