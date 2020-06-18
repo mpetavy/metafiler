@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/karrick/godirwalk"
 	"github.com/mpetavy/common"
 	"time"
 )
@@ -14,11 +15,11 @@ var (
 )
 
 var (
-	cfg     *Cfg
+	cfg *Cfg
 )
 
 func init() {
-	common.Init(true, LDFLAG_VERSION, "2019", "observes directory paths and index metadata", "Carl Zeiss Meditec AG", "https://www.zeiss.de/meditec-ag/home.html", "https://www.zeiss.de/meditec-ag/home.html", start, stop, nil, 0)
+	common.Init(true, LDFLAG_VERSION, "2020", "observes directory paths and index metadata", "mpetavy", fmt.Sprintf("https://github.com/mpetavy/%s", common.Title()), common.APACHE, start, stop, nil, 0)
 
 	common.Events.NewFuncReceiver(common.EventFlagsSet{}, func(ev common.Event) {
 		common.Debug("LDFLAG_VERSION: %s\n", LDFLAG_VERSION)
@@ -57,7 +58,7 @@ func CheckLicense() (bool, error) {
 func start() error {
 	var err error
 
-	cfg,err = NewCfg()
+	cfg, err = NewCfg()
 	if common.Error(err) {
 		return err
 	}
@@ -67,29 +68,37 @@ func start() error {
 		return err
 	}
 
+	err = NewIndexer(&cfg.Indexer)
+	if common.Error(err) {
+		return err
+	}
+
 	err = NewFilesystem(&cfg.Filesystem)
 	if common.Error(err) {
 		return err
 	}
 
-	err = cfg.Filesystem.Scan()
+	start := time.Now()
+	err = cfg.Filesystem.InitialScan(func(path string, attrs *godirwalk.Dirent) error {
+		if common.AppLifecycle().IsSet() {
+			cfg.Indexer.Channel <- &IndexMessage{path, attrs}
+		}
+
+		return nil
+	})
+
 	if common.Error(err) {
 		return err
 	}
+	fmt.Printf("time elapsed: %v\n", time.Since(start))
 
 	return nil
 }
 
 func stop() error {
-	err := cfg.Filesystem.Close()
-	if common.Error(err) {
-		return err
-	}
-
-	err = cfg.MongoDB.Close()
-	if common.Error(err) {
-		return err
-	}
+	common.Error(cfg.Filesystem.Close())
+	common.Error(cfg.Indexer.Close())
+	common.Error(cfg.MongoDB.Close())
 
 	return nil
 }

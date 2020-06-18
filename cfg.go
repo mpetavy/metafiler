@@ -8,11 +8,12 @@ import (
 
 type Cfg struct {
 	common.Configuration
-	MongoDB MongoCfg `json:"mongodb" html:"Mongo DB"`
+	MongoDB    MongoCfg      `json:"mongodb" html:"Mongo DB"`
 	Filesystem FilesystemCfg `json:"filesystem" html:"Filesystem"`
+	Indexer    IndexerCfg    `json:"indexer" html:"Indexer"`
 }
 
-func NewCfg() (*Cfg,error) {
+func NewCfg() (*Cfg, error) {
 	cfg := &Cfg{}
 
 	cfg.Flags = make(map[string]string)
@@ -21,27 +22,27 @@ func NewCfg() (*Cfg,error) {
 	if ba == nil {
 		var err error
 
-		ba,err = json.MarshalIndent(cfg,"","    ")
+		ba, err = json.MarshalIndent(cfg, "", "    ")
 		if common.Error(err) {
-			return nil,err
+			return nil, err
 		}
 
 		fn := common.AppFilename(".json")
 
-		err = ioutil.WriteFile(fn,ba,common.DefaultFileMode)
+		err = ioutil.WriteFile(fn, ba, common.DefaultFileMode)
 		if common.Error(err) {
-			return nil,err
+			return nil, err
 		}
 
-		common.Info("Default configuration file %v generated",fn)
+		common.Info("Default configuration file %v generated", fn)
 
-		return nil,&common.ErrExit{}
+		return nil, &common.ErrExit{}
 	}
 
-	err := json.Unmarshal(ba,cfg)
+	err := json.Unmarshal(ba, cfg)
 	if common.Error(err) {
-		return nil,err
+		return nil, err
 	}
 
-	return cfg,nil
+	return cfg, nil
 }
