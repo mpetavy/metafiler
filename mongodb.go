@@ -26,7 +26,7 @@ func NewMongoDB(mongodb *MongoCfg) error {
 		mongodb.Timeout = 3000
 	}
 
-	common.Info("Open: %v", mongodb.URL)
+	common.Info("MongoDB open: %v", mongodb.URL)
 
 	var err error
 
@@ -45,14 +45,14 @@ func NewMongoDB(mongodb *MongoCfg) error {
 }
 
 func createCtx(mongodb *MongoCfg) context.Context {
-	ctx, _ := context.WithTimeout(context.Background(), time.Duration(common.Max(1000,mongodb.Timeout))*time.Millisecond)
+	ctx, _ := context.WithTimeout(context.Background(), time.Duration(common.Max(1000, mongodb.Timeout))*time.Millisecond)
 
 	return ctx
 }
 
 func (mongodb *MongoCfg) Close() error {
 	if mongodb.Client != nil {
-		common.Info("Close")
+		common.Info("MongoDB close: %v", mongodb.URL)
 
 		return mongodb.Client.Disconnect(nil)
 	}
