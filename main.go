@@ -81,7 +81,7 @@ func start() error {
 		return err
 	}
 
-	err = NewMongoDB(&cfg.MongoDB)
+	err = NewMongo(&cfg.MongoDB)
 	if common.Error(err) {
 		return err
 	}
