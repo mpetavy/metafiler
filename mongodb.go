@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/mpetavy/common"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"time"
@@ -16,27 +17,27 @@ type MongoCfg struct {
 	Database string `json:"database" html:"Database"`
 	Timeout  int    `json:"timeout" html:"Timeout"`
 
-	URL    string        `json:"-"`
-	Client *mongo.Client `json:"-"`
+	url    string
+	client *mongo.Client
 }
 
 func NewMongoDB(mongodb *MongoCfg) error {
-	mongodb.URL = fmt.Sprintf("mongodb://%s:%d/?readPreference=primary&appname=%s&ssl=%v", mongodb.Hostname, mongodb.Port, common.Title(), mongodb.SSL)
+	mongodb.url = fmt.Sprintf("mongodb://%s:%d/?readPreference=primary&appname=%s&ssl=%v", mongodb.Hostname, mongodb.Port, common.Title(), mongodb.SSL)
 	if mongodb.Timeout == 0 {
 		mongodb.Timeout = 3000
 	}
 
-	common.Info("MongoDB open: %v", mongodb.URL)
+	common.Info("MongoDB open: %v", mongodb.url)
 
 	var err error
 
-	mongodb.Client, err = mongo.Connect(createCtx(mongodb), options.Client().
-		SetAppName(common.Title()).ApplyURI(mongodb.URL))
+	mongodb.client, err = mongo.Connect(createCtx(mongodb), options.Client().
+		SetAppName(common.Title()).SetMaxPoolSize(100).ApplyURI(mongodb.url))
 	if common.Error(err) {
 		return err
 	}
 
-	err = mongodb.Client.Ping(nil, nil)
+	err = mongodb.client.Ping(nil, nil)
 	if common.Error(err) {
 		return err
 	}
@@ -51,11 +52,22 @@ func createCtx(mongodb *MongoCfg) context.Context {
 }
 
 func (mongodb *MongoCfg) Close() error {
-	if mongodb.Client != nil {
+	if mongodb.client != nil {
 		common.Info("MongoDB close")
 
-		return mongodb.Client.Disconnect(nil)
+		return mongodb.client.Disconnect(nil)
 	}
 
 	return nil
+}
+
+func (mongodb *MongoCfg) Save(collectionName string, v interface{}) error {
+	b, err := bson.Marshal(v)
+	if common.Error(err) {
+		return err
+	}
+
+	_, err = mongodb.client.Database(mongodb.Database).Collection(collectionName).InsertOne(context.Background(), b)
+
+	return err
 }

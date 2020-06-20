@@ -29,6 +29,13 @@ type FileMessage struct {
 	attrs *godirwalk.Dirent
 }
 
+type Metadata map[string]string
+
+type DocumentRec struct {
+	Path     string
+	Metadata *Metadata
+}
+
 func init() {
 	common.Init(true, LDFLAG_VERSION, "2020", "observes directory paths and index metadata", "mpetavy", fmt.Sprintf("https://github.com/mpetavy/%s", common.Title()), common.APACHE, start, stop, nil, 0)
 
@@ -127,6 +134,14 @@ func start() error {
 				}()
 
 				metadata, err := cfg.Indexer.indexFile(fileMessage)
+				if common.Error(err) {
+					return
+				}
+
+				err = cfg.MongoDB.Save("doc", DocumentRec{
+					Path:     fileMessage.path,
+					Metadata: metadata,
+				})
 				if common.Error(err) {
 					return
 				}

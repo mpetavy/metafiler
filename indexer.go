@@ -12,8 +12,6 @@ type IndexerCfg struct {
 	TagRenames  []string `json:"dicomtagRenames" html:"Dicomtag renames"`
 }
 
-type Metadata map[string]string
-
 func NewIndexer(indexer *IndexerCfg) error {
 	common.Info("Indexer open")
 
