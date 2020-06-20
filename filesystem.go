@@ -24,7 +24,7 @@ type FilesystemCfg struct {
 	DirectoryIncludes []string `json:"directoryIncludes" html:"Directory includes"`
 	DirectoryExcludes []string `json:"directoryExcludes" html:"Directory excludes"`
 
-	Watcher *fsnotify.Watcher `json:"-"`
+	watcher *fsnotify.Watcher
 }
 
 func NewFilesystem(fs *FilesystemCfg) error {
@@ -45,7 +45,7 @@ func NewFilesystem(fs *FilesystemCfg) error {
 func (fs *FilesystemCfg) InitialScan(walkFunc godirwalk.WalkFunc) error {
 	var err error
 
-	fs.Watcher, err = fsnotify.NewWatcher()
+	fs.watcher, err = fsnotify.NewWatcher()
 	if common.Error(err) {
 		return err
 	}
@@ -73,7 +73,7 @@ func (fs *FilesystemCfg) InitialScan(walkFunc godirwalk.WalkFunc) error {
 			if attrs.ModeType().IsDir() {
 				common.Info("Add watcher: %v", path)
 
-				return fs.Watcher.Add(path)
+				return fs.watcher.Add(path)
 			}
 
 			return walkFunc(path, attrs)
@@ -90,10 +90,10 @@ func (fs *FilesystemCfg) InitialScan(walkFunc godirwalk.WalkFunc) error {
 }
 
 func (fs *FilesystemCfg) Close() error {
-	if fs.Watcher != nil {
+	if fs.watcher != nil {
 		common.Info("Watcher close")
 
-		common.Error(fs.Watcher.Close())
+		common.Error(fs.watcher.Close())
 	}
 
 	b, _ := common.FileExists(fs.Path)
