@@ -9,7 +9,8 @@
     "port": 27017,
     "ssl": false,
     "database": "metafiler",
-    "timeout": 0
+    "timeout": 0,
+    "poolsize": 5
   },
   "filesystem": {
     "path": "d:\\Dicom-Files.big",
