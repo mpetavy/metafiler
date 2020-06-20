@@ -42,7 +42,7 @@ func NewMongo(mgo *MongoCfg) error {
 			defer wg.Done()
 
 			client, err := mongo.Connect(createCtx(mgo), options.Client().
-				SetAppName(common.Title()).SetMaxPoolSize(100).ApplyURI(mgo.url))
+				SetAppName(common.Title()).ApplyURI(mgo.url))
 			if common.Error(err) {
 				ce.Add(err)
 			}
@@ -79,7 +79,7 @@ func (mgo *MongoCfg) Close() error {
 	for client := range mgo.pool {
 		if client != nil {
 
-			client.Disconnect(nil)
+			common.Error(client.Disconnect(nil))
 		}
 	}
 
