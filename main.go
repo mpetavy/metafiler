@@ -16,12 +16,12 @@ var (
 )
 
 var (
-	cfg *Cfg
-
+	cfg           *Cfg
 	fileChannel   chan *FileMessage
 	fileChannelWg sync.WaitGroup
 	workerChannel chan struct{}
 	workerWg      sync.WaitGroup
+	startTime     time.Time
 )
 
 type FileMessage struct {
@@ -119,52 +119,51 @@ func start() error {
 				if !ok {
 					return
 				}
+			case event := <-cfg.Filesystem.Watcher.Events:
+				common.Info("Event watcher: %v", event)
+			case err := <-cfg.Filesystem.Watcher.Errors:
+				common.Error(err)
 			case <-common.AppLifecycle().Channel():
 				return
 			}
 
-			workerChannel <- struct{}{}
-			workerWg.Add(1)
+			if fileMessage != nil {
+				workerChannel <- struct{}{}
+				workerWg.Add(1)
 
-			go func(fileMessage *FileMessage) {
-				defer func() {
-					workerWg.Done()
+				go func(fileMessage *FileMessage) {
+					defer func() {
+						workerWg.Done()
 
-					<-workerChannel
-				}()
+						<-workerChannel
+					}()
 
-				metadata, err := cfg.Indexer.indexFile(fileMessage)
-				if common.Error(err) {
-					return
-				}
+					metadata, err := cfg.Indexer.indexFile(fileMessage)
+					if common.Error(err) {
+						return
+					}
 
-				err = cfg.MongoDB.Save("doc", DocumentRec{
-					Path:     fileMessage.path,
-					Metadata: metadata,
-				})
-				if common.Error(err) {
-					return
-				}
+					err = cfg.MongoDB.Save("doc", DocumentRec{
+						Path:     fileMessage.path,
+						Metadata: metadata,
+					})
+					if common.Error(err) {
+						return
+					}
 
-				common.Debug("%v\n", metadata)
-			}(fileMessage)
+					common.Debug("%v\n", metadata)
+				}(fileMessage)
+			}
 		}
 	}()
 
-	start := time.Now()
+	startTime = time.Now()
 
 	err = cfg.Filesystem.InitialScan(func(path string, attrs *godirwalk.Dirent) error {
 		fileChannel <- &FileMessage{path, attrs}
 
 		return nil
 	})
-
-	close(fileChannel)
-
-	fileChannelWg.Wait()
-
-	common.Info("Time elapsed: %v", time.Since(start))
-
 	if common.Error(err) {
 		return err
 	}
@@ -173,6 +172,12 @@ func start() error {
 }
 
 func stop() error {
+	close(fileChannel)
+
+	fileChannelWg.Wait()
+
+	common.Info("Time elapsed: %v", time.Since(startTime))
+
 	workerWg.Wait()
 
 	common.Error(cfg.Filesystem.Close())
