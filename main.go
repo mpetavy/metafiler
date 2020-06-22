@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/fsnotify/fsnotify"
 	"github.com/karrick/godirwalk"
 	"github.com/mpetavy/common"
+	"os"
 	"sync"
 	"time"
 )
@@ -16,25 +18,25 @@ var (
 )
 
 var (
-	cfg           *Cfg
-	fileChannel   chan *FileMessage
-	fileChannelWg sync.WaitGroup
-	workerChannel chan struct{}
-	workerWg      sync.WaitGroup
-	startTime     time.Time
+	cfg        *Cfg
+	registerCh chan *RegisterMsg
+	registerWg sync.WaitGroup
+	workerCh   chan struct{}
+	workerWg   sync.WaitGroup
+	startTime  time.Time
 )
 
-type FileMessage struct {
-	path  string
-	attrs *godirwalk.Dirent
+type RegisterMsg struct {
+	IsInitialScan bool
+	Path          string
+	IsCreated     bool
+	IsWritten     bool
+	IsDeleted     bool
+	IsRenamed     bool
+	IsChmoded     bool
 }
 
 type Metadata map[string]string
-
-type DocumentRec struct {
-	Path     string
-	Metadata *Metadata
-}
 
 func init() {
 	common.Init(true, LDFLAG_VERSION, "2020", "observes directory paths and index metadata", "mpetavy", fmt.Sprintf("https://github.com/mpetavy/%s", common.Title()), common.APACHE, start, stop, nil, 0)
@@ -96,73 +98,169 @@ func start() error {
 		return err
 	}
 
-	fileChannel = make(chan *FileMessage, cfg.System.ChannelSize)
-	fileChannelWg = sync.WaitGroup{}
-	workerChannel = make(chan struct{}, cfg.System.WorkerSize)
+	workerCh = make(chan struct{}, cfg.System.WorkerSize)
 	workerWg = sync.WaitGroup{}
 
-	fileChannelWg.Add(1)
+	registerCh = make(chan *RegisterMsg, cfg.System.ChannelSize)
+	registerWg = sync.WaitGroup{}
+	registerWg.Add(1)
+
+	common.Info("Registration start")
 
 	go func() {
-		common.Info("Channel started")
 		defer func() {
-			fileChannelWg.Done()
-			common.Info("Channel stopped")
+			registerWg.Done()
+
+			common.Info("Registration finished")
 		}()
 
 		for {
-			var fileMessage *FileMessage
-			var ok bool
+			var registerMsg *RegisterMsg
 
 			select {
-			case fileMessage, ok = <-fileChannel:
-				if !ok {
-					return
+			case registerMsg = <-registerCh:
+				if registerMsg.Path == "" {
+					common.Info("Initial scan finished")
+
+					if !common.IsRunningAsService() {
+						return
+					}
+
+					continue
+				}
+
+				if registerMsg.IsInitialScan {
+					workerCh <- struct{}{}
+					workerWg.Add(1)
+
+					go func(registerMsg *RegisterMsg) {
+						defer func() {
+							workerWg.Done()
+
+							<-workerCh
+						}()
+
+						common.Error(indexFile(registerMsg))
+					}(registerMsg)
+				} else {
+					common.Info("Filesystem event: %+v", registerMsg)
+
+					common.Error(processMsg(registerMsg))
 				}
 			case event := <-cfg.Filesystem.Watcher.Events:
-				common.Info("Event watcher: %v", event)
+				registerCh <- &RegisterMsg{
+					IsInitialScan: false,
+					Path:          event.Name,
+					IsCreated:     event.Op&fsnotify.Create == fsnotify.Create,
+					IsWritten:     event.Op&fsnotify.Write == fsnotify.Write,
+					IsDeleted:     event.Op&fsnotify.Remove == fsnotify.Remove,
+					IsRenamed:     event.Op&fsnotify.Rename == fsnotify.Rename,
+					IsChmoded:     event.Op&fsnotify.Chmod == fsnotify.Chmod,
+				}
 			case err := <-cfg.Filesystem.Watcher.Errors:
 				common.Error(err)
 			case <-common.AppLifecycle().Channel():
 				return
-			}
-
-			if fileMessage != nil {
-				workerChannel <- struct{}{}
-				workerWg.Add(1)
-
-				go func(fileMessage *FileMessage) {
-					defer func() {
-						workerWg.Done()
-
-						<-workerChannel
-					}()
-
-					metadata, err := cfg.Indexer.indexFile(fileMessage)
-					if common.Error(err) {
-						return
-					}
-
-					err = cfg.MongoDB.Save("doc", DocumentRec{
-						Path:     fileMessage.path,
-						Metadata: metadata,
-					})
-					if common.Error(err) {
-						return
-					}
-
-					common.Debug("%v\n", metadata)
-				}(fileMessage)
 			}
 		}
 	}()
 
 	startTime = time.Now()
 
+	common.Info("Initial scan start")
+
 	err = cfg.Filesystem.InitialScan(func(path string, attrs *godirwalk.Dirent) error {
-		fileChannel <- &FileMessage{path, attrs}
+		registerCh <- &RegisterMsg{
+			IsInitialScan: true,
+			Path:          path,
+			IsCreated:     false,
+			IsWritten:     false,
+			IsDeleted:     false,
+			IsRenamed:     false,
+			IsChmoded:     false,
+		}
 
 		return nil
+	})
+	if common.Error(err) {
+		return err
+	}
+
+	registerCh <- &RegisterMsg{
+		IsInitialScan: true,
+		Path:          "",
+		IsCreated:     false,
+		IsWritten:     false,
+		IsDeleted:     false,
+		IsRenamed:     false,
+		IsChmoded:     false,
+	}
+
+	registerWg.Wait()
+
+	return nil
+}
+
+func processMsg(registerMsg *RegisterMsg) error {
+	var fi os.FileInfo
+
+	isDir := false
+
+	if cfg.Filesystem.IsWatched(registerMsg.Path) {
+		isDir = true
+	} else {
+		fi, _ = os.Stat(registerMsg.Path)
+
+		isDir = fi != nil && fi.IsDir()
+	}
+
+	if isDir {
+		if registerMsg.IsCreated {
+			err := cfg.Filesystem.AddWatcher(registerMsg.Path)
+			if common.Error(err) {
+				return err
+			}
+		}
+
+		if registerMsg.IsDeleted {
+			err := cfg.Filesystem.RemoveWatcher(registerMsg.Path)
+			if common.Error(err) {
+				return err
+			}
+		}
+
+		return nil
+	}
+
+	if registerMsg.IsCreated {
+		return indexFile(registerMsg)
+	}
+
+	if registerMsg.IsWritten {
+		err := removeFile(registerMsg)
+		if common.Error(err) {
+			return err
+		}
+
+		return indexFile(registerMsg)
+	}
+
+	if registerMsg.IsDeleted {
+		return removeFile(registerMsg)
+	}
+
+	return nil
+}
+
+func indexFile(registerMsg *RegisterMsg) error {
+	metadata, err := cfg.Indexer.indexFile(registerMsg)
+	if common.Error(err) {
+		return err
+	}
+
+	err = cfg.MongoDB.Upsert(&DocumentRec{
+		Path:     registerMsg.Path,
+		Metadata: metadata,
 	})
 	if common.Error(err) {
 		return err
@@ -171,11 +269,16 @@ func start() error {
 	return nil
 }
 
+func removeFile(registerMsg *RegisterMsg) error {
+	err := cfg.MongoDB.Delete("doc", registerMsg.Path)
+	if common.Error(err) {
+		return err
+	}
+
+	return nil
+}
+
 func stop() error {
-	close(fileChannel)
-
-	fileChannelWg.Wait()
-
 	common.Info("Time elapsed: %v", time.Since(startTime))
 
 	workerWg.Wait()
