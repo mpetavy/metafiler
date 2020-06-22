@@ -111,7 +111,7 @@ func start() error {
 		defer func() {
 			registerWg.Done()
 
-			common.Info("Registration finished")
+			common.Info("Registration stop")
 		}()
 
 		for {
