@@ -13,4 +13,4 @@ require (
 	go.mongodb.org/mongo-driver v1.3.4
 )
 
-replace github.com/mpetavy/common => ../common
+// replace github.com/mpetavy/common => ../common
