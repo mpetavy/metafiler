@@ -10,7 +10,8 @@
     "ssl": false,
     "database": "metafiler",
     "timeout": 0,
-    "poolsize": 5
+    "poolsize": 5,
+    "collection": "doc"
   },
   "filesystem": {
     "path": "d:\\Dicom-Files.big",

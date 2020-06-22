@@ -13,15 +13,15 @@ type IndexerCfg struct {
 }
 
 func NewIndexer(indexer *IndexerCfg) error {
-	common.Info("Indexer open")
+	common.Info("Indexer start")
 
 	return nil
 }
 
-func (indexer *IndexerCfg) indexFile(fileMessage *FileMessage) (*Metadata, error) {
+func (indexer *IndexerCfg) indexFile(fileMessage *RegisterMsg) (*Metadata, error) {
 	//common.Info("Indexer file: %v", fileMessage.path)
 
-	metadata, err := indexer.indexDicomFile(fileMessage.path)
+	metadata, err := indexer.indexDicomFile(fileMessage.Path)
 	if common.Error(err) {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (indexer *IndexerCfg) indexDicomFile(path string) (Metadata, error) {
 }
 
 func (indexer *IndexerCfg) Close() error {
-	common.Info("Indexer close")
+	common.Info("Indexer stop")
 
 	return nil
 }
