@@ -6,6 +6,7 @@ import (
 	"github.com/karrick/godirwalk"
 	"github.com/mpetavy/common"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -27,8 +28,8 @@ var (
 )
 
 type RegisterMsg struct {
-	IsInitialScan bool
 	Path          string
+	IsInitialScan bool
 	IsCreated     bool
 	IsWritten     bool
 	IsDeleted     bool
@@ -75,6 +76,33 @@ func CheckLicense() (bool, error) {
 	return licenseDate.After(time.Now()), fmt.Errorf(common.Translate("This is an ALPHA software release. For ZEISS internal usage/testing only. Expire date %v", licenseDate))
 }
 
+func formatMsg(registerMsg RegisterMsg) string {
+	var sb strings.Builder
+
+	sb.WriteString(registerMsg.Path)
+
+	if registerMsg.IsInitialScan {
+		sb.WriteString(" INITIALSCAN")
+	}
+	if registerMsg.IsCreated {
+		sb.WriteString(" CREATED")
+	}
+	if registerMsg.IsWritten {
+		sb.WriteString(" WRITTEN")
+	}
+	if registerMsg.IsDeleted {
+		sb.WriteString(" DELETED")
+	}
+	if registerMsg.IsRenamed {
+		sb.WriteString(" RENAMED")
+	}
+	if registerMsg.IsChmoded {
+		sb.WriteString(" CHMODED")
+	}
+
+	return sb.String()
+}
+
 func start() error {
 	var err error
 
@@ -98,20 +126,22 @@ func start() error {
 		return err
 	}
 
-	workerCh = make(chan struct{}, cfg.System.WorkerSize)
+	workerCh = make(chan struct{}, cfg.Filesystem.CountWorkers)
 	workerWg = sync.WaitGroup{}
 
-	registerCh = make(chan *RegisterMsg, cfg.System.ChannelSize)
+	registerCh = make(chan *RegisterMsg, 10000000)
 	registerWg = sync.WaitGroup{}
 	registerWg.Add(1)
 
 	common.Info("Registration start")
 
+	startTime = time.Now()
+
 	go func() {
 		defer func() {
-			registerWg.Done()
-
 			common.Info("Registration stop")
+
+			registerWg.Done()
 		}()
 
 		for {
@@ -120,7 +150,7 @@ func start() error {
 			select {
 			case registerMsg = <-registerCh:
 				if registerMsg.Path == "" {
-					common.Info("Initial scan finished")
+					common.Info("Initial scan stop: %v", time.Since(startTime))
 
 					if !common.IsRunningAsService() {
 						return
@@ -133,46 +163,40 @@ func start() error {
 					workerCh <- struct{}{}
 					workerWg.Add(1)
 
-					go func(registerMsg *RegisterMsg) {
+					go func(registerMsg RegisterMsg) {
 						defer func() {
 							workerWg.Done()
 
 							<-workerCh
 						}()
 
-						common.Error(indexFile(registerMsg))
-					}(registerMsg)
+						common.Error(processMsg(&registerMsg))
+					}(*registerMsg)
 				} else {
-					common.Info("Filesystem event: %+v", registerMsg)
-
 					common.Error(processMsg(registerMsg))
 				}
-			case event := <-cfg.Filesystem.Watcher.Events:
+			case event := <-cfg.Filesystem.watcher.Events:
 				registerCh <- &RegisterMsg{
-					IsInitialScan: false,
 					Path:          event.Name,
+					IsInitialScan: false,
 					IsCreated:     event.Op&fsnotify.Create == fsnotify.Create,
 					IsWritten:     event.Op&fsnotify.Write == fsnotify.Write,
 					IsDeleted:     event.Op&fsnotify.Remove == fsnotify.Remove,
 					IsRenamed:     event.Op&fsnotify.Rename == fsnotify.Rename,
 					IsChmoded:     event.Op&fsnotify.Chmod == fsnotify.Chmod,
 				}
-			case err := <-cfg.Filesystem.Watcher.Errors:
+			case err := <-cfg.Filesystem.watcher.Errors:
 				common.Error(err)
-			case <-common.AppLifecycle().Channel():
-				return
 			}
 		}
 	}()
-
-	startTime = time.Now()
 
 	common.Info("Initial scan start")
 
 	err = cfg.Filesystem.InitialScan(func(path string, attrs *godirwalk.Dirent) error {
 		registerCh <- &RegisterMsg{
-			IsInitialScan: true,
 			Path:          path,
+			IsInitialScan: true,
 			IsCreated:     false,
 			IsWritten:     false,
 			IsDeleted:     false,
@@ -187,8 +211,8 @@ func start() error {
 	}
 
 	registerCh <- &RegisterMsg{
-		IsInitialScan: true,
 		Path:          "",
+		IsInitialScan: true,
 		IsCreated:     false,
 		IsWritten:     false,
 		IsDeleted:     false,
@@ -215,7 +239,7 @@ func processMsg(registerMsg *RegisterMsg) error {
 	}
 
 	if isDir {
-		if registerMsg.IsCreated {
+		if registerMsg.IsCreated || registerMsg.IsInitialScan {
 			err := cfg.Filesystem.AddWatcher(registerMsg.Path)
 			if common.Error(err) {
 				return err
@@ -232,16 +256,7 @@ func processMsg(registerMsg *RegisterMsg) error {
 		return nil
 	}
 
-	if registerMsg.IsCreated {
-		return indexFile(registerMsg)
-	}
-
-	if registerMsg.IsWritten {
-		err := removeFile(registerMsg)
-		if common.Error(err) {
-			return err
-		}
-
+	if registerMsg.IsWritten || registerMsg.IsInitialScan {
 		return indexFile(registerMsg)
 	}
 
@@ -253,6 +268,10 @@ func processMsg(registerMsg *RegisterMsg) error {
 }
 
 func indexFile(registerMsg *RegisterMsg) error {
+	if cfg.Filesystem.LogEvents {
+		common.Info("Index file: %+v", formatMsg(*registerMsg))
+	}
+
 	metadata, err := cfg.Indexer.indexFile(registerMsg)
 	if common.Error(err) {
 		return err
@@ -260,7 +279,7 @@ func indexFile(registerMsg *RegisterMsg) error {
 
 	err = cfg.MongoDB.Upsert(&DocumentRec{
 		Path:     registerMsg.Path,
-		Metadata: metadata,
+		Metadata: *metadata,
 	})
 	if common.Error(err) {
 		return err
@@ -270,6 +289,10 @@ func indexFile(registerMsg *RegisterMsg) error {
 }
 
 func removeFile(registerMsg *RegisterMsg) error {
+	if cfg.Filesystem.LogEvents {
+		common.Info("Remove file: %+v", formatMsg(*registerMsg))
+	}
+
 	err := cfg.MongoDB.Delete("doc", registerMsg.Path)
 	if common.Error(err) {
 		return err
@@ -279,8 +302,6 @@ func removeFile(registerMsg *RegisterMsg) error {
 }
 
 func stop() error {
-	common.Info("Time elapsed: %v", time.Since(startTime))
-
 	workerWg.Wait()
 
 	common.Error(cfg.Filesystem.Close())
