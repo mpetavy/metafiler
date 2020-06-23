@@ -221,6 +221,7 @@ func start() error {
 	}
 
 	registerWg.Wait()
+	workerWg.Wait()
 
 	return nil
 }
@@ -302,8 +303,6 @@ func removeFile(registerMsg *RegisterMsg) error {
 }
 
 func stop() error {
-	workerWg.Wait()
-
 	common.Error(cfg.Filesystem.Close())
 	common.Error(cfg.Indexer.Close())
 	common.Error(cfg.MongoDB.Close())
