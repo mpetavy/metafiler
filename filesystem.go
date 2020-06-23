@@ -5,6 +5,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/karrick/godirwalk"
 	"github.com/mpetavy/common"
+	"sync"
 )
 
 type ErrCannotIndex struct {
@@ -16,12 +17,12 @@ func (e *ErrCannotIndex) Error() string {
 	return fmt.Sprintf("Cannot index path or file: %s Caused by: %s", e.path, e.casedBy)
 }
 
-type ErrFileNotFound struct {
+type ErrSkipNode struct {
 	path string
 }
 
-func (e *ErrFileNotFound) Error() string {
-	return fmt.Sprintf("File not found: %s", e.path)
+func (e *ErrSkipNode) Error() string {
+	return fmt.Sprintf("SkipNode: %s", e.path)
 }
 
 type FilesystemCfg struct {
@@ -31,12 +32,17 @@ type FilesystemCfg struct {
 	FileExcludes      []string `json:"fileExcludes" html:"´File excludes"`
 	DirectoryIncludes []string `json:"directoryIncludes" html:"Directory includes"`
 	DirectoryExcludes []string `json:"directoryExcludes" html:"Directory excludes"`
+	CountWorkers      int      `json:"countWorkers" html:"Count workers"`
+	LogEvents         bool     `json:"logEvents" html:"Log events"`
 
-	Watcher *fsnotify.Watcher
+	watcher *fsnotify.Watcher
 	watches map[string]struct{}
+	mu      sync.Mutex
 }
 
 func NewFilesystem(fs *FilesystemCfg) error {
+	fs.Path = common.CleanPath(fs.Path)
+
 	b, err := common.FileExists(fs.Path)
 	if common.Error(err) {
 		return err
@@ -46,14 +52,16 @@ func NewFilesystem(fs *FilesystemCfg) error {
 		return fmt.Errorf("file or path not found: %s", fs.Path)
 	}
 
+	common.Info("Filesystem start: %v", fs.Path)
+
 	common.Info("Filesystem Watcher start")
 
-	fs.Watcher, err = fsnotify.NewWatcher()
+	fs.watcher, err = fsnotify.NewWatcher()
 	if common.Error(err) {
 		return err
 	}
 
-	common.Info("Filesystem start: %v", fs.Path)
+	fs.watches = make(map[string]struct{})
 
 	return nil
 }
@@ -61,6 +69,10 @@ func NewFilesystem(fs *FilesystemCfg) error {
 func (fs *FilesystemCfg) InitialScan(walkFunc godirwalk.WalkFunc) error {
 	err := godirwalk.Walk(fs.Path, &godirwalk.Options{
 		ErrorCallback: func(path string, err error) godirwalk.ErrorAction {
+			if _, ok := err.(*ErrSkipNode); ok {
+				return godirwalk.SkipNode
+			}
+
 			if _, ok := err.(*common.ErrExit); ok {
 				return godirwalk.Halt
 			}
@@ -79,10 +91,8 @@ func (fs *FilesystemCfg) InitialScan(walkFunc godirwalk.WalkFunc) error {
 				return &common.ErrExit{}
 			}
 
-			if attrs.ModeType().IsDir() {
-				common.Info("Add watcher: %v", path)
-
-				return fs.Watcher.Add(path)
+			if !fs.Recursive && attrs.IsDir() && path != fs.Path {
+				return &ErrSkipNode{}
 			}
 
 			return walkFunc(path, attrs)
@@ -99,42 +109,57 @@ func (fs *FilesystemCfg) InitialScan(walkFunc godirwalk.WalkFunc) error {
 }
 
 func (fs *FilesystemCfg) AddWatcher(path string) error {
-	common.Info("Add watcher: %v", path)
+	if !fs.Recursive && path != fs.Path {
+		return nil
+	}
 
-	err := fs.Watcher.Add(path)
-	if common.Error(err) {
-		return err
+	fs.mu.Lock()
+	defer fs.mu.Unlock()
+
+	if fs.LogEvents {
+		common.Info("Add watcher: %v", path)
 	}
 
 	fs.watches[path] = struct{}{}
+
+	err := fs.watcher.Add(path)
+	if common.Error(err) {
+		return err
+	}
 
 	return nil
 }
 
 func (fs *FilesystemCfg) RemoveWatcher(path string) error {
-	common.Info("Remove watcher: %v", path)
+	fs.mu.Lock()
+	defer fs.mu.Unlock()
 
-	err := fs.Watcher.Remove(path)
-	if common.Error(err) {
-		return err
+	if fs.LogEvents {
+		common.Info("Remove watcher: %v", path)
 	}
 
 	delete(fs.watches, path)
+
+	// bug in fsnotify: sometimes the file is already physical deleted at first and then watcher.Remove breaks
+	common.DebugError(fs.watcher.Remove(path))
 
 	return nil
 }
 
 func (fs *FilesystemCfg) IsWatched(path string) bool {
+	fs.mu.Lock()
+	defer fs.mu.Unlock()
+
 	_, ok := fs.watches[path]
 
 	return ok
 }
 
 func (fs *FilesystemCfg) Close() error {
-	if fs.Watcher != nil {
+	if fs.watcher != nil {
 		common.Info("Filesystem Watcher stop")
 
-		common.Error(fs.Watcher.Close())
+		common.Error(fs.watcher.Close())
 	}
 
 	b, _ := common.FileExists(fs.Path)

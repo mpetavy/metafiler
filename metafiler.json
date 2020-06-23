@@ -1,25 +1,24 @@
 {
   "flags": {},
-  "system": {
-    "channelSize": 10000000,
-    "workerSize": 40
-  },
   "mongodb": {
     "hostname": "localhost",
     "port": 27017,
     "ssl": false,
     "database": "metafiler",
+    "dropDatabase": true,
     "timeout": 0,
-    "poolsize": 5,
+    "countHandles": 8,
     "collection": "doc"
   },
   "filesystem": {
-    "path": "d:\\Dicom-Files.big",
-    "recursive": false,
+    "path": "d:\\Dicom-Files",
+    "recursive": true,
     "fileIncludes": null,
     "fileExcludes": null,
     "directoryIncludes": null,
-    "directoryExcludes": null
+    "directoryExcludes": null,
+    "countWorkers": 16,
+    "logEvents": true
   },
   "indexer": {
     "dicomtagIncludes": null,
