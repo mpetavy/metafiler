@@ -54,7 +54,7 @@ func NewMongo(mgo *MongoCfg) error {
 				channelErrors.Add(err)
 			}
 
-			err = client.Ping(nil, nil)
+			err = client.Ping(createCtx(mgo), nil)
 			if common.Error(err) {
 				channelErrors.Add(err)
 			}
@@ -101,8 +101,7 @@ func (mgo *MongoCfg) Close() error {
 
 	for client := range mgo.pool {
 		if client != nil {
-
-			common.Error(client.Disconnect(nil))
+			common.Error(client.Disconnect(createCtx(mgo)))
 		}
 	}
 

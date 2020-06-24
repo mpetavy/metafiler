@@ -2,23 +2,23 @@
   "flags": {},
   "mongodb": {
     "hostname": "localhost",
-    "port": 27017,
+    "port": 27018,
     "ssl": false,
     "database": "metafiler",
     "dropDatabase": true,
-    "timeout": 0,
+    "timeout": 1000,
     "countHandles": 8,
     "collection": "doc"
   },
   "filesystem": {
     "path": "~/Dicom-Files.big",
-    "recursive": true,
+    "recursive": false,
     "fileIncludes": null,
     "fileExcludes": null,
     "directoryIncludes": null,
     "directoryExcludes": null,
     "countWorkers": 16,
-    "logEvents": false,
+    "logEvents": true,
     "skipInitialScan": false
   },
   "indexer": {
