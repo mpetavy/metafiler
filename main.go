@@ -220,8 +220,10 @@ func start() error {
 		IsChmoded:     false,
 	}
 
-	registerWg.Wait()
-	workerWg.Wait()
+	if !common.IsRunningAsService() {
+		registerWg.Wait()
+		workerWg.Wait()
+	}
 
 	return nil
 }
