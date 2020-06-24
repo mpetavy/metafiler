@@ -311,7 +311,9 @@ func removeFile(registerMsg *RegisterMsg) error {
 }
 
 func stop() error {
-	close(registerCh)
+	if registerCh != nil {
+		close(registerCh)
+	}
 
 	registerWg.Wait()
 	workerWg.Wait()
