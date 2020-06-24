@@ -40,7 +40,7 @@ type RegisterMsg struct {
 type Metadata map[string]string
 
 func init() {
-	common.Init(true, LDFLAG_VERSION, "2020", "observes directory paths and index metadata", "mpetavy", fmt.Sprintf("https://github.com/mpetavy/%s", common.Title()), common.APACHE, start, stop, nil, 0)
+	common.Init(true, LDFLAG_VERSION, "2020", "observes directory paths and index metadata", "mpetavy", fmt.Sprintf("https://github.com/mpetavy/%s", common.Title()), common.GPL2, start, stop, nil, 0)
 
 	common.Events.NewFuncReceiver(common.EventFlagsSet{}, func(ev common.Event) {
 		common.Debug("LDFLAG_VERSION: %s\n", LDFLAG_VERSION)
@@ -149,6 +149,10 @@ func start() error {
 
 			select {
 			case registerMsg = <-registerCh:
+				if registerMsg == nil {
+					return
+				}
+
 				if registerMsg.Path == "" {
 					common.Info("Initial scan stop: %v", time.Since(startTime))
 
@@ -191,11 +195,28 @@ func start() error {
 		}
 	}()
 
-	common.Info("Initial scan start")
+	if !cfg.Filesystem.SkipInitialScan {
+		common.Info("Initial scan start")
 
-	err = cfg.Filesystem.InitialScan(func(path string, attrs *godirwalk.Dirent) error {
+		err = cfg.Filesystem.InitialScan(func(path string, attrs *godirwalk.Dirent) error {
+			registerCh <- &RegisterMsg{
+				Path:          path,
+				IsInitialScan: true,
+				IsCreated:     false,
+				IsWritten:     false,
+				IsDeleted:     false,
+				IsRenamed:     false,
+				IsChmoded:     false,
+			}
+
+			return nil
+		})
+		if common.Error(err) {
+			return err
+		}
+
 		registerCh <- &RegisterMsg{
-			Path:          path,
+			Path:          "",
 			IsInitialScan: true,
 			IsCreated:     false,
 			IsWritten:     false,
@@ -204,25 +225,10 @@ func start() error {
 			IsChmoded:     false,
 		}
 
-		return nil
-	})
-	if common.Error(err) {
-		return err
-	}
-
-	registerCh <- &RegisterMsg{
-		Path:          "",
-		IsInitialScan: true,
-		IsCreated:     false,
-		IsWritten:     false,
-		IsDeleted:     false,
-		IsRenamed:     false,
-		IsChmoded:     false,
-	}
-
-	if !common.IsRunningAsService() {
-		registerWg.Wait()
-		workerWg.Wait()
+		if !common.IsRunningAsService() {
+			registerWg.Wait()
+			workerWg.Wait()
+		}
 	}
 
 	return nil
@@ -305,6 +311,11 @@ func removeFile(registerMsg *RegisterMsg) error {
 }
 
 func stop() error {
+	close(registerCh)
+
+	registerWg.Wait()
+	workerWg.Wait()
+
 	common.Error(cfg.Filesystem.Close())
 	common.Error(cfg.Indexer.Close())
 	common.Error(cfg.MongoDB.Close())
