@@ -11,14 +11,15 @@
     "collection": "doc"
   },
   "filesystem": {
-    "path": "d:\\Dicom-Files",
+    "path": "~/Dicom-Files.big",
     "recursive": true,
     "fileIncludes": null,
     "fileExcludes": null,
     "directoryIncludes": null,
     "directoryExcludes": null,
     "countWorkers": 16,
-    "logEvents": true
+    "logEvents": false,
+    "skipInitialScan": false
   },
   "indexer": {
     "dicomtagIncludes": null,

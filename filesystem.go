@@ -34,6 +34,7 @@ type FilesystemCfg struct {
 	DirectoryExcludes []string `json:"directoryExcludes" html:"Directory excludes"`
 	CountWorkers      int      `json:"countWorkers" html:"Count workers"`
 	LogEvents         bool     `json:"logEvents" html:"Log events"`
+	SkipInitialScan   bool     `json:"skipInitialScan" html:"Skip initial scan"`
 
 	watcher *fsnotify.Watcher
 	watches map[string]struct{}
