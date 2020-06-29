@@ -48,13 +48,17 @@ func NewMongo(mgo *MongoCfg) error {
 		go func() {
 			defer wg.Done()
 
-			client, err := mongo.Connect(createCtx(mgo), options.Client().
+			ctx, cancel := createCtx(mgo)
+			defer cancel()
+			client, err := mongo.Connect(ctx, options.Client().
 				SetAppName(common.Title()).ApplyURI(mgo.url))
 			if common.Error(err) {
 				channelErrors.Add(err)
 			}
 
-			err = client.Ping(createCtx(mgo), nil)
+			ctx, cancel = createCtx(mgo)
+			defer cancel()
+			err = client.Ping(ctx, nil)
 			if common.Error(err) {
 				channelErrors.Add(err)
 			}
@@ -84,14 +88,14 @@ func NewMongo(mgo *MongoCfg) error {
 	return nil
 }
 
-func createCtx(mgo *MongoCfg) context.Context {
+func createCtx(mgo *MongoCfg) (context.Context, context.CancelFunc) {
 	if mgo.Timeout == 0 {
-		return context.Background()
+		return context.Background(), func() {}
 	}
 
-	ctx, _ := context.WithTimeout(context.Background(), common.MillisecondToDuration(mgo.Timeout))
+	ctx, cancel := context.WithTimeout(context.Background(), common.MillisecondToDuration(mgo.Timeout))
 
-	return ctx
+	return ctx, cancel
 }
 
 func (mgo *MongoCfg) Close() error {
@@ -101,7 +105,9 @@ func (mgo *MongoCfg) Close() error {
 
 	for client := range mgo.pool {
 		if client != nil {
-			common.Error(client.Disconnect(createCtx(mgo)))
+			ctx, cancel := createCtx(mgo)
+			defer cancel()
+			common.Error(client.Disconnect(ctx))
 		}
 	}
 
@@ -116,10 +122,13 @@ func (mgo *MongoCfg) Upsert(rec *DocumentRec) error {
 
 	filter := bson.D{{"path", rec.Path}}
 
+	ctx, cancel := createCtx(mgo)
+	defer cancel()
+
 	_, err := client.
 		Database(mgo.Database).
 		Collection(mgo.Collection).
-		UpdateOne(createCtx(mgo), filter, bson.D{{"$set", rec}}, &options.UpdateOptions{Upsert: &_true})
+		UpdateOne(ctx, filter, bson.D{{"$set", rec}}, &options.UpdateOptions{Upsert: &_true})
 
 	return err
 }
@@ -130,10 +139,13 @@ func (mgo *MongoCfg) Delete(collectionName string, path string) error {
 		mgo.pool <- client
 	}()
 
+	ctx, cancel := createCtx(mgo)
+	defer cancel()
+
 	_, err := client.
 		Database(mgo.Database).
 		Collection(collectionName).
-		DeleteOne(createCtx(mgo), bson.D{{"path", path}})
+		DeleteOne(ctx, bson.D{{"path", path}})
 
 	return err
 }
@@ -146,7 +158,10 @@ func (mgo *MongoCfg) Drop() error {
 		mgo.pool <- client
 	}()
 
-	return client.Database(mgo.Database).Drop(createCtx(mgo))
+	ctx, cancel := createCtx(mgo)
+	defer cancel()
+
+	return client.Database(mgo.Database).Drop(ctx)
 }
 
 func (mgo *MongoCfg) CreateIndex() error {
@@ -168,7 +183,10 @@ func (mgo *MongoCfg) CreateIndex() error {
 		},
 	}
 
-	_, err := client.Database(mgo.Database).Collection(mgo.Collection).Indexes().CreateOne(createCtx(mgo), mod)
+	ctx, cancel := createCtx(mgo)
+	defer cancel()
+
+	_, err := client.Database(mgo.Database).Collection(mgo.Collection).Indexes().CreateOne(ctx, mod)
 
 	return err
 }

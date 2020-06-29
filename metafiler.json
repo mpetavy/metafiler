@@ -11,7 +11,7 @@
     "collection": "doc"
   },
   "filesystem": {
-    "path": "d:/Dicom-Files.small",
+    "path": "d:/Dicom-Files.big",
     "recursive": true,
     "fileIncludes": null,
     "fileExcludes": null,
