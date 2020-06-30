@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"github.com/mpetavy/common"
-	"io/ioutil"
 	"runtime"
 )
 
@@ -29,21 +28,12 @@ func NewCfg() (*Cfg, error) {
 
 	ba := common.GetConfigurationBuffer()
 	if ba == nil {
-		var err error
-
-		ba, err = json.MarshalIndent(cfg, "", "  ")
+		err := common.SetConfiguration(cfg)
 		if common.Error(err) {
 			return nil, err
 		}
 
-		fn := common.AppFilename(".json")
-
-		err = ioutil.WriteFile(fn, ba, common.DefaultFileMode)
-		if common.Error(err) {
-			return nil, err
-		}
-
-		common.Info("Default configuration file %v generated", fn)
+		common.Info("Default configuration file generated")
 
 		return nil, &common.ErrExit{}
 	}
