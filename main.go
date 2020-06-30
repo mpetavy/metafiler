@@ -321,9 +321,11 @@ func stop() error {
 	registerWg.Wait()
 	workerWg.Wait()
 
-	common.Error(cfg.Filesystem.Close())
-	common.Error(cfg.Indexer.Close())
-	common.Error(cfg.MongoDB.Close())
+	if cfg != nil {
+		common.Error(cfg.Filesystem.Close())
+		common.Error(cfg.Indexer.Close())
+		common.Error(cfg.MongoDB.Close())
+	}
 
 	return nil
 }
