@@ -1,26 +1,25 @@
 {
-    "application": "metafiler-1.0.0",
-    "flags": {},
-    "mongodb": {
-        "hostname": "lcoalhost",
-        "port": 27017,
-        "ssl": false,
-        "database": "",
-        "dropDatabase": false,
-        "timeout": 3000,
-        "countHandles": 8,
-        "collection": "doc"
-    },
+  "flags": {},
+  "mongodb": {
+    "hostname": "localhost",
+    "port": 27017,
+    "ssl": false,
+    "database": "metafiler",
+    "dropDatabase": true,
+    "timeout": 1000,
+    "countHandles": 8,
+    "collection": "doc"
+  },
   "filesystem": {
-      "path": "",
-      "recursive": false,
-      "fileIncludes": null,
-      "fileExcludes": null,
-      "directoryIncludes": null,
-      "directoryExcludes": null,
-      "countWorkers": 16,
-      "logEvents": false,
-      "skipInitialScan": false
+    "path": "d:/Dicom-Files.big",
+    "recursive": true,
+    "fileIncludes": null,
+    "fileExcludes": null,
+    "directoryIncludes": null,
+    "directoryExcludes": null,
+    "countWorkers": 16,
+    "logEvents": false,
+    "skipInitialScan": false
   },
   "indexer": {
     "dicomtagIncludes": null,
