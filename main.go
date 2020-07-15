@@ -16,7 +16,7 @@ var (
 	LDFLAG_HOMEPAGE  = fmt.Sprintf("https://github.com/mpetavy/%s", common.Title()) // will be replaced with ldflag
 	LDFLAG_LICENSE   = common.GPL2                                                  // will be replaced with ldflag
 	LDFLAG_VERSION   = "1.0.0"                                                      // will be replaced with ldflag
-	LDFLAG_EXPIRE    = "01.07.2020"                                                 // will be replaced with ldflag
+	LDFLAG_EXPIRE    = "01.09.2020"                                                 // will be replaced with ldflag
 	LDFLAG_GIT       = ""                                                           // will be replaced with ldflag
 	LDFLAG_COUNTER   = "9999"                                                       // will be replaced with ldflag
 )
