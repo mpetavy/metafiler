@@ -43,7 +43,7 @@ type RegisterMsg struct {
 type Metadata map[string]string
 
 func init() {
-	common.Init(true, LDFLAG_VERSION, "2020", "file system indexing", LDFLAG_DEVELOPER, LDFLAG_HOMEPAGE, LDFLAG_LICENSE, start, stop, nil, 0)
+	common.Init(true, LDFLAG_VERSION, "", "2020", "file system indexing", LDFLAG_DEVELOPER, LDFLAG_HOMEPAGE, LDFLAG_LICENSE, start, stop, nil, 0)
 
 	common.Events.NewFuncReceiver(common.EventFlagsSet{}, func(ev common.Event) {
 		common.Debug("LDFLAG_VERSION: %s\n", LDFLAG_VERSION)
