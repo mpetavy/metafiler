@@ -11,7 +11,7 @@
     "collection": "doc"
   },
   "filesystem": {
-    "path": "d:/Dicom-Files.big",
+    "path": "/mnt/freenas/Dicom-Files.big/2000/1",
     "recursive": true,
     "fileIncludes": null,
     "fileExcludes": null,
