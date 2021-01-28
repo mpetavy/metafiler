@@ -54,7 +54,7 @@ func NewEcho(ecco *EchoCfg) error {
 			case http.StateActive:
 				tlsConn, ok := conn.(*tls.Conn)
 				if ok {
-					common.DebugTlsConnectionInfo(fmt.Sprintf("HTTP :%d", ecco.Port), tlsConn)
+					common.TlsDebugConnection(fmt.Sprintf("HTTP :%d", ecco.Port), tlsConn)
 				}
 			default:
 				// NOTE: this is a good place to track connection level metrics :)
@@ -63,12 +63,12 @@ func NewEcho(ecco *EchoCfg) error {
 	}
 
 	if ecco.Tls {
-		tlsPackage, err := common.GetTlsPackage()
+		tlsConfig, err := common.NewTlsConfigFromFlags()
 		if common.Error(err) {
 			return err
 		}
 
-		ecco.httpServer.TLSConfig = &tlsPackage.Config
+		ecco.httpServer.TLSConfig = tlsConfig
 	}
 
 	ecco.ecco.DisableHTTP2 = true
