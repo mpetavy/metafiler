@@ -44,18 +44,15 @@ type FilesystemCfg struct {
 func NewFilesystem(fs *FilesystemCfg) error {
 	fs.Path = common.CleanPath(fs.Path)
 
-	b, err := common.FileExists(fs.Path)
-	if common.Error(err) {
-		return err
-	}
-
-	if !b {
-		return fmt.Errorf("file or path not found: %s", fs.Path)
+	if !common.FileExists(fs.Path) {
+		return &common.ErrFileNotFound{fs.Path}
 	}
 
 	common.Info("Filesystem start: %v", fs.Path)
 
 	common.Info("Filesystem Watcher start")
+
+	var err error
 
 	fs.watcher, err = fsnotify.NewWatcher()
 	if common.Error(err) {
@@ -163,9 +160,7 @@ func (fs *FilesystemCfg) Close() error {
 		common.Error(fs.watcher.Close())
 	}
 
-	b, _ := common.FileExists(fs.Path)
-
-	if b {
+	if common.FileExists(fs.Path) {
 		common.Info("Filesystem stop")
 	}
 
