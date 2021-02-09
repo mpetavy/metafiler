@@ -26,7 +26,11 @@ func NewCfg() (*Cfg, error) {
 	cfg.MongoDB.Collection = "doc"
 	cfg.MongoDB.Timeout = 3000
 
-	ba := common.GetConfigurationBuffer()
+	ba, err := common.GetConfigurationBuffer()
+	if common.Error(err) {
+		return nil, err
+	}
+
 	if ba == nil {
 		err := common.SetConfiguration(cfg)
 		if common.Error(err) {
@@ -38,7 +42,7 @@ func NewCfg() (*Cfg, error) {
 		return nil, &common.ErrExit{}
 	}
 
-	err := json.Unmarshal(ba, cfg)
+	err = json.Unmarshal(ba, cfg)
 	if common.Error(err) {
 		return nil, err
 	}
