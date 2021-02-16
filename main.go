@@ -56,9 +56,7 @@ func init() {
 
 	ok, err := CheckLicense()
 	if !ok {
-		common.Error(err)
-
-		common.Exit(1)
+		common.Panic(err)
 	} else {
 		if err != nil {
 			common.Warn(err.Error())
