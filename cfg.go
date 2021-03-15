@@ -16,8 +16,6 @@ type Cfg struct {
 func NewCfg() (*Cfg, error) {
 	cfg := &Cfg{}
 
-	cfg.Flags = make(map[string]string)
-
 	cfg.Filesystem.CountWorkers = runtime.NumCPU() * 2
 
 	cfg.MongoDB.Hostname = "lcoalhost"
