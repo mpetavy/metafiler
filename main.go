@@ -18,7 +18,7 @@ var (
 	LDFLAG_VERSION   = "1.0.0"                                                      // will be replaced with ldflag
 	LDFLAG_EXPIRE    = ""                                                           // will be replaced with ldflag
 	LDFLAG_GIT       = ""                                                           // will be replaced with ldflag
-	LDFLAG_COUNTER   = "9999"                                                       // will be replaced with ldflag
+	LDFLAG_BUILD     = "9999"                                                       // will be replaced with ldflag
 )
 
 var (
@@ -43,13 +43,13 @@ type RegisterMsg struct {
 type Metadata map[string]string
 
 func init() {
-	common.Init(true, LDFLAG_VERSION, "", "2020", "file system indexing", LDFLAG_DEVELOPER, LDFLAG_HOMEPAGE, LDFLAG_LICENSE, nil, start, stop, nil, 0)
+	common.Init(true, LDFLAG_VERSION, LDFLAG_GIT, LDFLAG_BUILD, "2020", "file system indexing", LDFLAG_DEVELOPER, LDFLAG_HOMEPAGE, LDFLAG_LICENSE, nil, start, stop, nil, 0)
 
 	common.Events.NewFuncReceiver(common.EventFlagsSet{}, func(ev common.Event) {
 		common.Debug("LDFLAG_VERSION: %s\n", LDFLAG_VERSION)
 		common.Debug("LDFLAG_EXPIRE: %s\n", LDFLAG_EXPIRE)
 		common.Debug("LDFLAG_GIT: %s\n", LDFLAG_GIT)
-		common.Debug("LDFLAG_COUNTER: %s\n", LDFLAG_COUNTER)
+		common.Debug("LDFLAG_BUILD: %s\n", LDFLAG_BUILD)
 	})
 
 	var err error
