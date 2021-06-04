@@ -40,8 +40,8 @@ func (indexer *IndexerCfg) indexDicomFile(path string) (Metadata, error) {
 
 	if err != nil {
 		return nil, &ErrCannotIndex{
-			path:    path,
-			casedBy: err.Error(),
+			Path:     path,
+			CausedBy: err.Error(),
 		}
 	}
 
