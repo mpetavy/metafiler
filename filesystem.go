@@ -9,20 +9,20 @@ import (
 )
 
 type ErrCannotIndex struct {
-	path    string
-	casedBy string
+	Path     string
+	CausedBy string
 }
 
 func (e *ErrCannotIndex) Error() string {
-	return fmt.Sprintf("Cannot index path or file: %s Caused by: %s", e.path, e.casedBy)
+	return fmt.Sprintf("Cannot index path or file: %s Caused by: %s", e.Path, e.CausedBy)
 }
 
 type ErrSkipNode struct {
-	path string
+	Path string
 }
 
 func (e *ErrSkipNode) Error() string {
-	return fmt.Sprintf("SkipNode: %s", e.path)
+	return fmt.Sprintf("SkipNode: %s", e.Path)
 }
 
 type FilesystemCfg struct {
@@ -76,8 +76,8 @@ func (fs *FilesystemCfg) InitialScan(walkFunc godirwalk.WalkFunc) error {
 			}
 
 			common.Error(&ErrCannotIndex{
-				path:    path,
-				casedBy: err.Error(),
+				Path:     path,
+				CausedBy: err.Error(),
 			})
 
 			return godirwalk.SkipNode
