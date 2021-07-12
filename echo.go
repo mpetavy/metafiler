@@ -92,7 +92,9 @@ func NewEcho(ecco *EchoCfg) error {
 		htmlText, err := page.HTML()
 		common.Error(err)
 
-		common.Debug(htmlText)
+		if !common.IsRunningAsExecutable() {
+			common.Debug(htmlText)
+		}
 
 		common.Error(context.HTML(code, htmlText))
 	}
