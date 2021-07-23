@@ -10,7 +10,7 @@ require (
 	github.com/mpetavy/common v1.2.52
 	github.com/mpetavy/go-dicom v0.0.0-20200615105037-742a1dfb9324
 	github.com/quasoft/memstore v0.0.0-20191010062613-2bce066d2b0b
-	go.mongodb.org/mongo-driver v1.3.4
+	go.mongodb.org/mongo-driver v1.5.1
 )
 
 //replace github.com/mpetavy/common => ../common
