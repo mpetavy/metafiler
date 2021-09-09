@@ -18,19 +18,19 @@ func NewCfg() (*Cfg, error) {
 
 	cfg.Filesystem.CountWorkers = runtime.NumCPU() * 2
 
-	cfg.MongoDB.Hostname = "lcoalhost"
+	cfg.MongoDB.Hostname = "localhost"
 	cfg.MongoDB.Port = 27017
 	cfg.MongoDB.CountHandles = runtime.NumCPU()
 	cfg.MongoDB.Collection = "doc"
 	cfg.MongoDB.Timeout = 3000
 
-	ba, err := common.GetConfigurationBuffer()
+	ba, err := common.LoadConfigurationFile()
 	if common.Error(err) {
 		return nil, err
 	}
 
 	if ba == nil {
-		err := common.SetConfiguration(cfg)
+		err := common.SaveConfiguration(cfg)
 		if common.Error(err) {
 			return nil, err
 		}
