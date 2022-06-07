@@ -36,7 +36,7 @@ func NewEcho(ecco *EchoCfg) error {
 	loggerConfig := middleware.DefaultLoggerConfig
 	loggerConfig.Output = common.NewEchoLogger()
 
-	secret, err := common.GenerateRandomBytes(32)
+	secret, err := common.RndBytes(32)
 	if common.Error(err) {
 		return err
 	}
