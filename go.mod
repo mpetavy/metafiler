@@ -9,7 +9,7 @@ require (
 	github.com/klauspost/compress v1.13.1 // indirect
 	github.com/labstack/echo-contrib v0.11.0
 	github.com/labstack/echo/v4 v4.6.3
-	github.com/mpetavy/common v1.4.26
+	github.com/mpetavy/common v1.4.29
 	github.com/mpetavy/go-dicom v0.0.0-20210302105037-44b79120da96
 	github.com/quasoft/memstore v0.0.0-20191010062613-2bce066d2b0b
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
