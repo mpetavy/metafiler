@@ -59,7 +59,7 @@ func init() {
 		common.Panic(err)
 	} else {
 		if err != nil {
-			common.Warn(err.Error())
+			common.Warn(err)
 		}
 	}
 }
