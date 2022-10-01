@@ -8,7 +8,7 @@ require (
 	github.com/karrick/godirwalk v1.16.1
 	github.com/klauspost/compress v1.13.1 // indirect
 	github.com/labstack/echo-contrib v0.11.0
-	github.com/labstack/echo/v4 v4.6.3
+	github.com/labstack/echo/v4 v4.9.0
 	github.com/mpetavy/common v1.4.36
 	github.com/mpetavy/go-dicom v0.0.0-20210302105037-44b79120da96
 	github.com/quasoft/memstore v0.0.0-20191010062613-2bce066d2b0b
