@@ -77,26 +77,7 @@ func NewEcho(ecco *EchoCfg) error {
 	ecco.ecco.HTTPErrorHandler = func(err error, context echo.Context) {
 		common.Error(err)
 
-		code := http.StatusInternalServerError
-		if he, ok := err.(*echo.HTTPError); ok {
-			code = he.Code
-		}
-
-		if !common.IsSuppressedError(err) {
-			common.Error(common.PushFlash(context, common.FLASH_ERROR, err.Error()))
-		}
-
-		page, err := common.NewRefreshPage(common.Title(), ROUTE_HOME)
-		common.Error(err)
-
-		htmlText, err := page.HTML()
-		common.Error(err)
-
-		if !common.IsRunningAsExecutable() {
-			common.Debug(htmlText)
-		}
-
-		common.Error(context.HTML(code, htmlText))
+		echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	ecco.ecco.Use(middleware.LoggerWithConfig(loggerConfig))
 	ecco.ecco.Use(middleware.Recover())
