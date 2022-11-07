@@ -1,5 +1,4 @@
 {
-  "flags": {},
   "mongodb": {
     "hostname": "localhost",
     "port": 27017,
@@ -11,7 +10,7 @@
     "collection": "doc"
   },
   "filesystem": {
-    "path": "/mnt/freenas/Dicom-Files.big/2000/1",
+    "path": "/mnt/freenas/temp/Dicom-Files.big/2000/1",
     "recursive": true,
     "fileIncludes": null,
     "fileExcludes": null,
