@@ -7,7 +7,7 @@ require (
 	github.com/karrick/godirwalk v1.17.0
 	github.com/labstack/echo-contrib v0.13.0
 	github.com/labstack/echo/v4 v4.9.1
-	github.com/mpetavy/common v1.5.4
+	github.com/mpetavy/common v1.5.5
 	github.com/mpetavy/go-dicom v0.0.0-20221010131248-5609fde90af7
 	github.com/quasoft/memstore v0.0.0-20191010062613-2bce066d2b0b
 	go.mongodb.org/mongo-driver v1.11.0
@@ -57,16 +57,16 @@ require (
 	go.bug.st/serial v1.4.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/crypto v0.1.0 // indirect
-	golang.org/x/exp v0.0.0-20221031165847-c99f073a8326 // indirect
+	golang.org/x/exp v0.0.0-20221106115401-f9659909a136 // indirect
 	golang.org/x/net v0.1.0 // indirect
 	golang.org/x/oauth2 v0.1.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.1.0 // indirect
+	golang.org/x/sys v0.2.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
-	golang.org/x/time v0.1.0 // indirect
+	golang.org/x/time v0.2.0 // indirect
 	google.golang.org/api v0.102.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20221027153422-115e99e71e1c // indirect
+	google.golang.org/genproto v0.0.0-20221107162902-2d387536bcdd // indirect
 	google.golang.org/grpc v1.50.1 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	software.sslmate.com/src/go-pkcs12 v0.2.0 // indirect
