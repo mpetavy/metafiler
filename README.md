@@ -2,9 +2,9 @@
 
 ## Doc Version
 
-Version | Date | Author | Description
------------- | ------------ | ------------- | -------------
-1.0.0 | 17.06.2020 | mpetavy | Initial release
+| Version | Date       | Author  | Description     |
+| ------- | ---------- | ------- | --------------- |
+| 1.0.0   | 17.06.2020 | mpetavy | Initial release |
 
 ## Description
 
