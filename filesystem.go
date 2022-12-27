@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/fsnotify/fsnotify"
-	"github.com/karrick/godirwalk"
 	"github.com/mpetavy/common"
 	"sync"
 )
@@ -15,14 +14,6 @@ type ErrCannotIndex struct {
 
 func (e *ErrCannotIndex) Error() string {
 	return fmt.Sprintf("Cannot index path or file: %s Caused by: %s", e.Path, e.CausedBy)
-}
-
-type ErrSkipNode struct {
-	Path string
-}
-
-func (e *ErrSkipNode) Error() string {
-	return fmt.Sprintf("SkipNode: %s", e.Path)
 }
 
 type FilesystemCfg struct {
@@ -60,48 +51,6 @@ func NewFilesystem(fs *FilesystemCfg) error {
 	}
 
 	fs.watches = make(map[string]struct{})
-
-	return nil
-}
-
-func (fs *FilesystemCfg) InitialScan(walkFunc godirwalk.WalkFunc) error {
-	err := godirwalk.Walk(fs.Path, &godirwalk.Options{
-		ErrorCallback: func(path string, err error) godirwalk.ErrorAction {
-			if _, ok := err.(*ErrSkipNode); ok {
-				return godirwalk.SkipNode
-			}
-
-			if _, ok := err.(*common.ErrExit); ok {
-				return godirwalk.Halt
-			}
-
-			common.Error(&ErrCannotIndex{
-				Path:     path,
-				CausedBy: err.Error(),
-			})
-
-			return godirwalk.SkipNode
-		},
-		FollowSymbolicLinks: false,
-		Unsorted:            true,
-		Callback: func(path string, attrs *godirwalk.Dirent) error {
-			if !common.AppLifecycle().IsSet() {
-				return &common.ErrExit{}
-			}
-
-			if !fs.Recursive && attrs.IsDir() && path != fs.Path {
-				return &ErrSkipNode{}
-			}
-
-			return walkFunc(path, attrs)
-		},
-		PostChildrenCallback: nil,
-		ScratchBuffer:        nil,
-		AllowNonDirectory:    false,
-	})
-	if common.Error(err) {
-		return err
-	}
 
 	return nil
 }

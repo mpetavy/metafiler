@@ -10,7 +10,7 @@
     "collection": "doc"
   },
   "filesystem": {
-    "path": "/mnt/freenas/temp/Dicom-Files.big/2000/1",
+    "path": "z:\\temp\\Dicom-Files.1000",
     "recursive": true,
     "fileIncludes": null,
     "fileExcludes": null,

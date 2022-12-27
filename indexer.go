@@ -38,7 +38,7 @@ func (indexer *IndexerCfg) indexDicomFile(path string) (Metadata, error) {
 		StopAtTag:     nil,
 	})
 
-	if err != nil {
+	if common.Error(err) {
 		return nil, &ErrCannotIndex{
 			Path:     path,
 			CausedBy: err.Error(),

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/fsnotify/fsnotify"
-	"github.com/karrick/godirwalk"
 	"github.com/mpetavy/common"
 	"os"
 	"strings"
@@ -199,7 +198,7 @@ func start() error {
 	if !cfg.Filesystem.SkipInitialScan {
 		common.Info("Initial scan start")
 
-		err = cfg.Filesystem.InitialScan(func(path string, attrs *godirwalk.Dirent) error {
+		fw, err := common.NewFilewalker(cfg.Filesystem.Path, cfg.Filesystem.Recursive, true, func(path string, fi os.FileInfo) error {
 			registerCh <- &RegisterMsg{
 				Path:          path,
 				IsInitialScan: true,
@@ -212,6 +211,11 @@ func start() error {
 
 			return nil
 		})
+		if common.Error(err) {
+			return err
+		}
+
+		err = fw.Run()
 		if common.Error(err) {
 			return err
 		}

@@ -12,8 +12,10 @@ METAFILER is provess to monitor a filesystem and index the file metadata to a Mo
 
 ## Usage
 
-* Start a mongodb instance as a docker container: docker run --rm -d -p 27017-27019:27017-27019 --name mongodb mongo:
-  latest
+* Start a mongodb instance as a docker container:
+
+      docker run --rm -d -p 27017-27019:27017-27019 --name mongodb mongo:latest
+
 * Connect to mongodb docker container: docker exec -it mongodb bash
 
 ## License
