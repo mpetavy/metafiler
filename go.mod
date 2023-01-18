@@ -6,7 +6,7 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/labstack/echo-contrib v0.13.0
 	github.com/labstack/echo/v4 v4.9.1
-	github.com/mpetavy/common v1.5.16
+	github.com/mpetavy/common v1.5.17
 	github.com/mpetavy/go-dicom v0.0.0-20221010131248-5609fde90af7
 	github.com/quasoft/memstore v0.0.0-20191010062613-2bce066d2b0b
 	go.mongodb.org/mongo-driver v1.11.0
@@ -45,6 +45,7 @@ require (
 	github.com/montanaflynn/stats v0.6.6 // indirect
 	github.com/paulrosania/go-charset v0.0.0-20190326053356-55c9d7a5834c // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/robertkrimen/otto v0.2.1 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
@@ -67,6 +68,7 @@ require (
 	google.golang.org/genproto v0.0.0-20221109142239-94d6d90a7d66 // indirect
 	google.golang.org/grpc v1.50.1 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
+	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	software.sslmate.com/src/go-pkcs12 v0.2.0 // indirect
 )
 
