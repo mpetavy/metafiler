@@ -46,6 +46,8 @@ func NewMongo(mgo *MongoCfg) error {
 		wg.Add(1)
 
 		go func() {
+			defer common.UnregisterGoRoutine(common.RegisterGoRoutine(1))
+
 			defer wg.Done()
 
 			ctx, cancel := createCtx(mgo)

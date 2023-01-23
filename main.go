@@ -138,6 +138,8 @@ func start() error {
 	startTime = time.Now()
 
 	go func() {
+		defer common.UnregisterGoRoutine(common.RegisterGoRoutine(1))
+
 		defer func() {
 			common.Info("Registration stop")
 
@@ -168,6 +170,8 @@ func start() error {
 					workerWg.Add(1)
 
 					go func(registerMsg RegisterMsg) {
+						defer common.UnregisterGoRoutine(common.RegisterGoRoutine(1))
+
 						defer func() {
 							workerWg.Done()
 
