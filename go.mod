@@ -6,7 +6,7 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/labstack/echo-contrib v0.13.0
 	github.com/labstack/echo/v4 v4.9.1
-	github.com/mpetavy/common v1.5.32
+	github.com/mpetavy/common v1.5.37
 	github.com/mpetavy/go-dicom v0.0.0-20221010131248-5609fde90af7
 	github.com/quasoft/memstore v0.0.0-20191010062613-2bce066d2b0b
 	go.mongodb.org/mongo-driver v1.11.0
