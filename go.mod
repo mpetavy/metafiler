@@ -6,7 +6,7 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/labstack/echo-contrib v0.13.0
 	github.com/labstack/echo/v4 v4.9.1
-	github.com/mpetavy/common v1.5.45
+	github.com/mpetavy/common v1.5.46
 	github.com/mpetavy/go-dicom v0.0.0-20221010131248-5609fde90af7
 	github.com/quasoft/memstore v0.0.0-20191010062613-2bce066d2b0b
 	go.mongodb.org/mongo-driver v1.11.0
@@ -57,14 +57,14 @@ require (
 	github.com/xdg-go/stringprep v1.0.3 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
-	go.bug.st/serial v1.4.0 // indirect
+	go.bug.st/serial v1.5.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/crypto v0.2.0 // indirect
 	golang.org/x/exp v0.0.0-20221110155412-d0897a79cd37 // indirect
 	golang.org/x/net v0.2.0 // indirect
 	golang.org/x/oauth2 v0.2.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.2.0 // indirect
+	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
 	golang.org/x/time v0.2.0 // indirect
 	google.golang.org/api v0.103.0 // indirect
