@@ -202,7 +202,7 @@ func start() error {
 	if !cfg.Filesystem.SkipInitialScan {
 		common.Info("Initial scan start")
 
-		fw, err := common.NewFilewalker(cfg.Filesystem.Path, cfg.Filesystem.Recursive, true, func(path string, fi os.FileInfo) error {
+		err := common.WalkFiles(cfg.Filesystem.Path, cfg.Filesystem.Recursive, true, func(path string, fi os.FileInfo) error {
 			registerCh <- &RegisterMsg{
 				Path:          path,
 				IsInitialScan: true,
@@ -215,11 +215,6 @@ func start() error {
 
 			return nil
 		})
-		if common.Error(err) {
-			return err
-		}
-
-		err = fw.Run()
 		if common.Error(err) {
 			return err
 		}
