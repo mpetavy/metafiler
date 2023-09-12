@@ -39,7 +39,7 @@ func NewMongo(mgo *MongoCfg) error {
 	common.Info("MongoDB start: %v", mgo.url)
 
 	mgo.pool = make(chan *mongo.Client, mgo.CountHandles)
-	channelErrors := common.ChannelError{}
+	channelErrors := common.Sync[error]{}
 	wg := sync.WaitGroup{}
 
 	for i := 0; i < mgo.CountHandles; i++ {
@@ -55,14 +55,14 @@ func NewMongo(mgo *MongoCfg) error {
 			client, err := mongo.Connect(ctx, options.Client().
 				SetAppName(common.Title()).ApplyURI(mgo.url))
 			if common.Error(err) {
-				channelErrors.Add(err)
+				channelErrors.Set(err)
 			}
 
 			ctx, cancel = createCtx(mgo)
 			defer cancel()
 			err = client.Ping(ctx, nil)
 			if common.Error(err) {
-				channelErrors.Add(err)
+				channelErrors.Set(err)
 			}
 
 			mgo.pool <- client
@@ -71,7 +71,7 @@ func NewMongo(mgo *MongoCfg) error {
 
 	wg.Wait()
 
-	if channelErrors.Exists() {
+	if channelErrors.IsSet() {
 		return channelErrors.Get()
 	}
 

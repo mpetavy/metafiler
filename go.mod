@@ -1,12 +1,14 @@
 module metafiler
 
-go 1.20
+go 1.21
+
+toolchain go1.21.1
 
 require (
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/labstack/echo-contrib v0.14.1
 	github.com/labstack/echo/v4 v4.10.2
-	github.com/mpetavy/common v1.6.5
+	github.com/mpetavy/common v1.6.8
 	github.com/mpetavy/go-dicom v0.0.0-20230223204403-807ccc095cae
 	github.com/quasoft/memstore v0.0.0-20191010062613-2bce066d2b0b
 	go.mongodb.org/mongo-driver v1.11.6
@@ -37,7 +39,6 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
 	github.com/googleapis/gax-go/v2 v2.8.0 // indirect
-	github.com/gookit/color v1.5.3 // indirect
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/securecookie v1.1.1 // indirect
 	github.com/gorilla/sessions v1.2.1 // indirect
@@ -58,7 +59,6 @@ require (
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
-	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
 	go.bug.st/serial v1.5.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
