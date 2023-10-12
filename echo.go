@@ -50,7 +50,7 @@ func NewEcho(ecco *EchoCfg) error {
 		ConnState: func(conn net.Conn, cs http.ConnState) {
 			switch cs {
 			case http.StateNew:
-				common.Error(conn.SetReadDeadline(time.Now().Add(time.Minute)))
+				common.Error(conn.SetReadDeadline(common.CalcDeadline(time.Now(), time.Minute)))
 			case http.StateActive:
 				tlsConn, ok := conn.(*tls.Conn)
 				if ok {
@@ -77,7 +77,7 @@ func NewEcho(ecco *EchoCfg) error {
 	ecco.ecco.HTTPErrorHandler = func(err error, context echo.Context) {
 		common.Error(err)
 
-		echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		common.Error(echo.NewHTTPError(http.StatusInternalServerError, err.Error()))
 	}
 	ecco.ecco.Use(middleware.LoggerWithConfig(loggerConfig))
 	ecco.ecco.Use(middleware.Recover())
