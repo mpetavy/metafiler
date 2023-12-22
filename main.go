@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"fmt"
 	"github.com/fsnotify/fsnotify"
 	"github.com/mpetavy/common"
@@ -13,7 +14,7 @@ import (
 var (
 	LDFLAG_DEVELOPER = "mpetavy"                                                    // will be replaced with ldflag
 	LDFLAG_HOMEPAGE  = fmt.Sprintf("https://github.com/mpetavy/%s", common.Title()) // will be replaced with ldflag
-	LDFLAG_LICENSE   = common.GPL2                                                  // will be replaced with ldflag
+	LDFLAG_LICENSE   = common.APACHE                                                // will be replaced with ldflag
 	LDFLAG_VERSION   = "1.0.0"                                                      // will be replaced with ldflag
 	LDFLAG_EXPIRE    = ""                                                           // will be replaced with ldflag
 	LDFLAG_GIT       = ""                                                           // will be replaced with ldflag
@@ -41,8 +42,11 @@ type RegisterMsg struct {
 
 type Metadata map[string]string
 
+//go:embed go.mod
+var resources embed.FS
+
 func init() {
-	common.Init("metafiler", LDFLAG_VERSION, LDFLAG_GIT, LDFLAG_BUILD, "2020", "file system indexing", LDFLAG_DEVELOPER, LDFLAG_HOMEPAGE, LDFLAG_LICENSE, nil, start, stop, nil, 0)
+	common.Init("", LDFLAG_VERSION, LDFLAG_GIT, LDFLAG_BUILD, "file system indexing", LDFLAG_DEVELOPER, LDFLAG_HOMEPAGE, LDFLAG_LICENSE, &resources, start, stop, nil, 0)
 
 	common.Events.AddListener(common.EventFlagsSet{}, func(ev common.Event) {
 		common.Debug("LDFLAG_VERSION: %s\n", LDFLAG_VERSION)
