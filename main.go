@@ -12,13 +12,13 @@ import (
 )
 
 var (
-	LDFLAG_DEVELOPER = "mpetavy"                                                    // will be replaced with ldflag
-	LDFLAG_HOMEPAGE  = fmt.Sprintf("https://github.com/mpetavy/%s", common.Title()) // will be replaced with ldflag
-	LDFLAG_LICENSE   = common.APACHE                                                // will be replaced with ldflag
-	LDFLAG_VERSION   = "1.0.0"                                                      // will be replaced with ldflag
-	LDFLAG_EXPIRE    = ""                                                           // will be replaced with ldflag
-	LDFLAG_GIT       = ""                                                           // will be replaced with ldflag
-	LDFLAG_BUILD     = ""                                                           // will be replaced with ldflag
+	LDFLAG_DEVELOPER = "mpetavy"                                           // will be replaced with ldflag
+	LDFLAG_HOMEPAGE  = fmt.Sprintf("https://github.com/mpetavy/metafiler") // will be replaced with ldflag
+	LDFLAG_LICENSE   = common.APACHE                                       // will be replaced with ldflag
+	LDFLAG_VERSION   = "1.0.0"                                             // will be replaced with ldflag
+	LDFLAG_EXPIRE    = ""                                                  // will be replaced with ldflag
+	LDFLAG_GIT       = ""                                                  // will be replaced with ldflag
+	LDFLAG_BUILD     = ""                                                  // will be replaced with ldflag
 )
 
 var (
@@ -54,20 +54,9 @@ func init() {
 		common.Debug("LDFLAG_GIT: %s\n", LDFLAG_GIT)
 		common.Debug("LDFLAG_BUILD: %s\n", LDFLAG_BUILD)
 	})
-
-	var err error
-
-	ok, err := CheckLicense()
-	if !ok {
-		common.Panic(err)
-	} else {
-		if err != nil {
-			common.WarnError(err)
-		}
-	}
 }
 
-func CheckLicense() (bool, error) {
+func CheckExpire() (bool, error) {
 	if LDFLAG_EXPIRE == "" {
 		return true, nil
 	}
@@ -77,7 +66,7 @@ func CheckLicense() (bool, error) {
 		return false, err
 	}
 
-	return licenseDate.After(time.Now()), fmt.Errorf(common.Translate("This is an ALPHA software release. For internal usage/testing only. Expire date %v", licenseDate))
+	return licenseDate.After(time.Now()), fmt.Errorf(common.Translate("For internal usage/testing only. Expire date %v", licenseDate))
 }
 
 func formatMsg(registerMsg RegisterMsg) string {
@@ -109,6 +98,15 @@ func formatMsg(registerMsg RegisterMsg) string {
 
 func start() error {
 	var err error
+
+	ok, err := CheckExpire()
+	if !ok {
+		common.Panic(err)
+	} else {
+		if err != nil {
+			common.WarnError(err)
+		}
+	}
 
 	cfg, err = NewCfg()
 	if common.Error(err) {
