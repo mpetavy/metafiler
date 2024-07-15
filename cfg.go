@@ -1,20 +1,28 @@
 package main
 
 import (
-	"encoding/json"
 	"github.com/mpetavy/common"
 	"runtime"
 )
 
-type Cfg struct {
+type MetafilerCfg struct {
 	common.Configuration
 	MongoDB    MongoCfg      `json:"mongodb" html:"Mongo DB"`
 	Filesystem FilesystemCfg `json:"filesystem" html:"Filesystem"`
 	Indexer    IndexerCfg    `json:"indexer" html:"Indexer"`
 }
 
-func NewCfg() (*Cfg, error) {
-	cfg := &Cfg{}
+func NewCfg() (*MetafilerCfg, error) {
+	cfg, err := common.LoadConfigurationFile[MetafilerCfg]()
+	if common.Error(err) {
+		return nil, err
+	}
+
+	if cfg != nil {
+		return cfg, nil
+	}
+
+	cfg = &MetafilerCfg{}
 
 	cfg.Filesystem.CountWorkers = runtime.NumCPU() * 2
 
@@ -24,26 +32,12 @@ func NewCfg() (*Cfg, error) {
 	cfg.MongoDB.Collection = "doc"
 	cfg.MongoDB.Timeout = 3000
 
-	ba, err := common.LoadConfigurationFile()
+	err = common.SaveConfigurationFile(cfg)
 	if common.Error(err) {
 		return nil, err
 	}
 
-	if ba == nil {
-		err := common.SaveConfiguration(cfg)
-		if common.Error(err) {
-			return nil, err
-		}
+	common.Info("Default configuration file generated")
 
-		common.Info("Default configuration file generated")
-
-		return nil, &common.ErrExit{}
-	}
-
-	err = json.Unmarshal(ba, cfg)
-	if common.Error(err) {
-		return nil, err
-	}
-
-	return cfg, nil
+	return nil, &common.ErrExit{}
 }

@@ -1,4 +1,6 @@
 {
+  "applicationTitle": "metafiler",
+  "applicationVersion": "1.0.0",
   "mongodb": {
     "hostname": "localhost",
     "port": 27017,

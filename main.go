@@ -22,7 +22,7 @@ var (
 )
 
 var (
-	cfg        *Cfg
+	cfg        *MetafilerCfg
 	registerCh chan *RegisterMsg
 	registerWg sync.WaitGroup
 	workerCh   chan struct{}
