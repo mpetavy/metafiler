@@ -8,7 +8,7 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/labstack/echo-contrib v0.14.1
 	github.com/labstack/echo/v4 v4.10.2
-	github.com/mpetavy/common v1.8.45
+	github.com/mpetavy/common v1.8.46
 	github.com/mpetavy/go-dicom v0.0.0-20230223204403-807ccc095cae
 	github.com/quasoft/memstore v0.0.0-20191010062613-2bce066d2b0b
 	go.mongodb.org/mongo-driver v1.11.6
@@ -17,6 +17,7 @@ require (
 require (
 	github.com/beevik/etree v1.1.4 // indirect
 	github.com/creack/goselect v0.1.2 // indirect
+	github.com/dlclark/regexp2 v1.11.2 // indirect
 	github.com/fatih/structtag v1.2.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
