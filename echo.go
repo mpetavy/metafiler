@@ -36,10 +36,7 @@ func NewEcho(ecco *EchoCfg) error {
 	loggerConfig := middleware.DefaultLoggerConfig
 	loggerConfig.Output = common.NewEchoLogger()
 
-	secret, err := common.RndBytes(32)
-	if common.Error(err) {
-		return err
-	}
+	secret := common.RndBytes(32)
 
 	ecco.store = memstore.NewMemStore(secret)
 	ecco.httpServer = &http.Server{
