@@ -9,7 +9,7 @@ require (
 	github.com/labstack/echo-contrib v0.14.1
 	github.com/labstack/echo/v4 v4.10.2
 	github.com/mpetavy/common v1.9.69
-	github.com/mpetavy/go-dicom v0.0.0-20241216175347-39625280639d
+	github.com/mpetavy/go-dicom v1.0.0
 	github.com/quasoft/memstore v0.0.0-20191010062613-2bce066d2b0b
 	go.mongodb.org/mongo-driver v1.11.6
 )
