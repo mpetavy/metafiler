@@ -48,7 +48,7 @@ var resources embed.FS
 func init() {
 	common.Init("", LDFLAG_VERSION, LDFLAG_GIT, LDFLAG_BUILD, "file system indexing", LDFLAG_DEVELOPER, LDFLAG_HOMEPAGE, LDFLAG_LICENSE, &resources, start, stop, nil, 0)
 
-	common.Events.AddListener(common.EventFlagsSet{}, func(ev common.Event) {
+	common.Events.AddListener(common.EventFlags{}, func(ev common.Event) {
 		common.Debug("LDFLAG_VERSION: %s\n", LDFLAG_VERSION)
 		common.Debug("LDFLAG_EXPIRE: %s\n", LDFLAG_EXPIRE)
 		common.Debug("LDFLAG_GIT: %s\n", LDFLAG_GIT)
